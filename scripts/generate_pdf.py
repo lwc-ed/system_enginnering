@@ -1,17 +1,58 @@
 #!/usr/bin/env python3
-"""Convert a markdown file to PDF with CJK font support."""
+"""Convert a markdown file to PDF with CJK font support and Mermaid diagram rendering."""
 
 import sys
+import re
+import os
+import tempfile
+import subprocess
 import markdown
 from weasyprint import HTML
+
+
+def render_mermaid_blocks(md_content: str, tmp_dir: str) -> str:
+    """Replace ```mermaid blocks with inline SVG."""
+    pattern = re.compile(r'```mermaid\n(.*?)\n```', re.DOTALL)
+    counter = [0]
+
+    def replace_block(match):
+        diagram = match.group(1)
+        idx = counter[0]
+        counter[0] += 1
+
+        mmd_path = os.path.join(tmp_dir, f'diagram_{idx}.mmd')
+        png_path = os.path.join(tmp_dir, f'diagram_{idx}.png')
+
+        with open(mmd_path, 'w', encoding='utf-8') as f:
+            f.write(diagram)
+
+        script = os.path.join(os.path.dirname(__file__), 'mermaid_to_svg.mjs')
+        result = subprocess.run(
+            ['node', script, mmd_path, png_path],
+            capture_output=True, text=True
+        )
+
+        if result.returncode != 0 or not os.path.exists(png_path):
+            return f'<pre>{diagram}</pre>'
+
+        import base64
+        with open(png_path, 'rb') as f:
+            png_b64 = base64.b64encode(f.read()).decode()
+        return f'<div style="text-align:center;margin:20px 0"><img src="data:image/png;base64,{png_b64}" style="max-width:100%"></div>'
+
+    return pattern.sub(replace_block, md_content)
+
 
 def convert(md_path: str, output_path: str):
     with open(md_path, 'r', encoding='utf-8') as f:
         md_content = f.read()
 
-    html_body = markdown.markdown(md_content, extensions=['tables', 'toc'])
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        md_content = render_mermaid_blocks(md_content, tmp_dir)
 
-    html = f"""<!DOCTYPE html>
+        html_body = markdown.markdown(md_content, extensions=['tables', 'toc'])
+
+        html = f"""<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -47,6 +88,7 @@ def convert(md_path: str, output_path: str):
   del {{ color: #999; }}
   hr {{ border: none; border-top: 1px solid #ddd; margin: 24px 0; }}
   p {{ margin: 8px 0; }}
+  svg {{ max-width: 100%; height: auto; }}
 </style>
 </head>
 <body>
@@ -54,8 +96,9 @@ def convert(md_path: str, output_path: str):
 </body>
 </html>"""
 
-    HTML(string=html).write_pdf(output_path)
-    print(f"PDF generated: {output_path}")
+        HTML(string=html).write_pdf(output_path)
+        print(f"PDF generated: {output_path}")
+
 
 if __name__ == '__main__':
     if len(sys.argv) == 3:
