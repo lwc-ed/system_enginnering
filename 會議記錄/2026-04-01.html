@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 2cm; }
+  body { font-family: "Noto Serif CJK TC", serif; font-size: 11pt; line-height: 1.6; }
+  h1 { font-size: 20pt; border-bottom: 2px solid #333; padding-bottom: 4px; }
+  h2 { font-size: 16pt; border-bottom: 1px solid #666; padding-bottom: 3px; margin-top: 1.5em; }
+  h3 { font-size: 13pt; margin-top: 1.2em; }
+  h4 { font-size: 11.5pt; margin-top: 1em; }
+  table { border-collapse: collapse; width: 100%; margin: 0.8em 0; font-size: 9.5pt; }
+  th, td { border: 1px solid #999; padding: 5px 8px; text-align: left; }
+  th { background-color: #f0f0f0; font-weight: bold; }
+  blockquote { border-left: 3px solid #4a90d9; margin: 0.8em 0; padding: 0.6em 1em; background: #f7f9fc; }
+  blockquote strong { color: #2c5282; }
+  blockquote em { color: #666; font-size: 9.5pt; }
+  code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; font-size: 9.5pt; }
+  pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>會議記錄 — 2026-04-01</h1>
+<p><strong>參與者：</strong> 呂孰睿（V&amp;V Engineer）、李瑋晨（Requirement Engineer）、鄭弘煒（Lead Integration Engineer）、Claude（System Architect）</p>
+<hr />
+<h2>本次討論重點</h2>
+<ol>
+<li>重新以使用者角度建立 User Requirements（UR）</li>
+<li>將 Operational Requirements（OR）重整為 Why / What / Shall Not 三層結構</li>
+<li>移除 OR-11（費率變更 30 天公告）→ 歸為 constraint，非 requirement</li>
+<li>補上投資風險評估測驗、信用卡回饋等功能對應的 OR</li>
+</ol>
+<hr />
+<h2>一、角色分配（本次）</h2>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>扮演者</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>System Architect</td>
+<td>Claude</td>
+</tr>
+<tr>
+<td>V&amp;V Engineer</td>
+<td>呂孰睿</td>
+</tr>
+<tr>
+<td>Requirement Engineer</td>
+<td>李瑋晨</td>
+</tr>
+<tr>
+<td>Lead Integration Engineer</td>
+<td>鄭弘煒</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>二、User Requirements（UR）</h2>
+<table>
+<thead>
+<tr>
+<th>UR ID</th>
+<th>User Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UR-01</td>
+<td>我想讓我的錢變多</td>
+</tr>
+<tr>
+<td>UR-02</td>
+<td>我想知道我現在還能花多少</td>
+</tr>
+<tr>
+<td>UR-03</td>
+<td>我快花太多的時候要有人提醒我</td>
+</tr>
+<tr>
+<td>UR-04</td>
+<td>我想知道省下來的錢怎麼用可以錢滾錢</td>
+</tr>
+<tr>
+<td>UR-05</td>
+<td>我不會理財，想要有人帶我開始</td>
+</tr>
+<tr>
+<td>UR-06</td>
+<td>我想知道哪些消費可以拿回饋</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>三、運行情境（Scenarios）</h2>
+<h3>Scenario 1：月初大額支出型</h3>
+<p>使用者月初繳租金、學費等大筆固定支出，剩餘預算驟降。系統需判斷這是「正常支出」而非異常，並重新規劃剩餘週期的可用額度。</p>
+<h3>Scenario 2：新鮮人財務茫然型</h3>
+<p>剛出社會，第一次拿到整筆薪水，不知道怎麼分配，需要系統引導建立消費結構。</p>
+<h3>Scenario 3：理財入門誘因型</h3>
+<p>使用者看到「省下來的錢可以做什麼」——投資、累積資產——有正向誘因讓他願意控制消費。</p>
+<h3>Scenario 4：月底危機型</h3>
+<p>使用者在發薪週期第 25 天，累積消費已達 budget 的 85%，ML 預測到發薪日前將 run out，系統觸發預警推播。</p>
+<hr />
+<h2>四、Operational Requirements（OR）</h2>
+<h3>推導鏈摘要</h3>
+<table>
+<thead>
+<tr>
+<th>OR</th>
+<th>主題</th>
+<th>系統需求（SRS）</th>
+<th>性能需求（PR）</th>
+<th>情境主要來源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OR-01</td>
+<td>避免超支</td>
+<td>MOUSE-SRS-001（自訂發薪週期）、MOUSE-SRS-002（LineBot 輸入）、MOUSE-SRS-003（電子發票匯入）、MOUSE-SRS-004（去重）、MOUSE-SRS-005（即時餘額）、MOUSE-SRS-006（Warning 通知）、MOUSE-SRS-007（Emergency 通知）、MOUSE-SRS-008（ML 預測）</td>
+<td>MOUSE-PR-001（週期更新 1s）、MOUSE-PR-002（回傳 3s）、MOUSE-PR-003（匯入 5min / 99%）、MOUSE-PR-004（去重 2s / 98%）、MOUSE-PR-005（餘額 1s / ±1 元）、MOUSE-PR-006（Warning 1min / 95%）、MOUSE-PR-007（Emergency 30s / 99%）、MOUSE-PR-008（ML Recall 85% / Precision 75%）</td>
+<td>四個情境均適用</td>
+</tr>
+<tr>
+<td>OR-02</td>
+<td>健康消費習慣</td>
+<td>MOUSE-SRS-009（即時餘額回饋）、MOUSE-SRS-010（限制推播頻率）、MOUSE-SRS-011（無紀錄主動詢問）</td>
+<td>MOUSE-PR-009（餘額延遲 ≤1s / 目標 0.5s）、MOUSE-PR-010（每 24h 最多 1 次）、MOUSE-PR-011（72h 無紀錄觸發）</td>
+<td>情境一、情境二、情境四</td>
+</tr>
+<tr>
+<td>OR-03</td>
+<td>理財入門誘因</td>
+<td>MOUSE-SRS-012（風險評估測驗）、MOUSE-SRS-013（投資建議通知）、MOUSE-SRS-014（信用卡回饋資訊）</td>
+<td>MOUSE-PR-012（測驗 ≤10 題 / 結果 2s）、MOUSE-PR-013（週期後 24h 產生建議）、MOUSE-PR-014（每 24h 更新 / 爬蟲 95%）</td>
+<td>情境三（理財入門誘因型）</td>
+</tr>
+<tr>
+<td>OR-04</td>
+<td>新鮮人財務結構</td>
+<td>MOUSE-SRS-015（冷啟動預算提醒）、MOUSE-SRS-016（無紀錄主動詢問）</td>
+<td>MOUSE-PR-015（Layer 1 規則 80% 門檻 / 1min / 95%）、MOUSE-PR-016（72h 無紀錄觸發）</td>
+<td>情境二（新鮮人財務茫然型）</td>
+</tr>
+<tr>
+<td>Shall Not</td>
+<td>系統禁止事項</td>
+<td>MOUSE-SRS-017（不得自動投資）、MOUSE-SRS-018（不得處理外幣）、MOUSE-SRS-019（不得提供資料給第三方）、MOUSE-SRS-020（不得共享折扣碼）</td>
+<td>—</td>
+<td>全域適用</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>OR-01（Why）：幫助使用者避免超支</h3>
+<blockquote>
+<p>MOUSE 系統 shall 幫助使用者避免於單一發薪週期內發生超支。
+由使用者需求可知，本系統核心目的不是單純記帳，而是降低使用者於發薪週期內預算失控之風險；因此 OR 應聚焦於「避免超支」而非僅止於「提供消費紀錄」。
+<strong>情境來源：</strong> 四個情境均適用</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>需求編號</th>
+<th>層級</th>
+<th>需求語句</th>
+<th>推導邏輯</th>
+<th>情境來源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MOUSE-SRS-001</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 允許使用者自行設定發薪日作為預算週期起點。</td>
+<td>使用者的薪資週期不一定依曆法月份計算；若系統無法以個人發薪日作為週期起點，則剩餘預算與預警判斷將失真，因此需允許自訂預算週期。</td>
+<td>情境一（月初大額支出型）、情境四（月底危機型）</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-002</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 允許使用者透過 LineBot 輸入消費紀錄。</td>
+<td>若系統要有效避免超支，必須先持續取得消費資料；考量使用者操作成本與使用頻率，需提供低摩擦之輸入方式。</td>
+<td>情境二（新鮮人財務茫然型）</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-003</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 自動匯入使用者授權之電子發票資料。</td>
+<td>僅靠手動輸入容易漏記，將導致預算判斷不完整；因此需引入自動匯入機制以提升資料完整性。</td>
+<td>情境二（新鮮人財務茫然型）、情境四（月底危機型）</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-004</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 自動去除重複消費紀錄。</td>
+<td>消費資料可能同時來自手動輸入與發票匯入；若未去除重複，將高估支出並造成錯誤預警，因此需建立去重機制。</td>
+<td>情境一（月初大額支出型）、情境四（月底危機型）</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-005</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 於使用者輸入或匯入消費後即時顯示當期剩餘可用預算。</td>
+<td>使用者若無法立即看到剩餘預算，則無法及時調整消費決策；因此系統需提供即時回饋。</td>
+<td>情境一、情境二、情境三、情境四</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-006</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 於偵測到超支風險時透過 Line 推播通知使用者。</td>
+<td>當使用者支出逐漸接近預算上限時，若僅靠被動查詢將不足以介入，因此需主動預警。</td>
+<td>情境四（月底危機型）</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-007</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 於使用者即將或已無剩餘預算時發送緊急通知。</td>
+<td>當使用者已接近用罄預算或已超支時，系統需以更高優先級介入，以降低後續失控風險。</td>
+<td>情境四（月底危機型）</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-008</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 於累積足夠消費資料後啟動 ML 模型預測使用者之超支風險。</td>
+<td>單靠靜態門檻無法反映個人化消費趨勢；為提早辨識「尚未超支但極可能超支」之狀況，需導入預測機制。</td>
+<td>情境四（月底危機型）</td>
+</tr>
+<tr>
+<td>MOUSE-PR-001</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>MOUSE 系統 shall 允許使用者將每月 1 至 31 日之任一合法日期設定為預算週期起點，並於設定後 1 秒內完成新週期計算與顯示。</td>
+<td>SRS-001 中之「允許設定」需具體化為可驗證條件，包括合法輸入範圍與更新時間，否則無法測試。</td>
+<td>情境一、情境四</td>
+</tr>
+<tr>
+<td>MOUSE-PR-002</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>MOUSE 系統 shall 於使用者透過 LineBot 提交一筆消費紀錄後，於 3 秒內完成接收、解析並回傳成功或失敗訊息。</td>
+<td>SRS-002 中之「允許輸入」需轉為可量測之反應時間，確保操作可用性。</td>
+<td>情境二</td>
+</tr>
+<tr>
+<td>MOUSE-PR-003</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>MOUSE 系統 shall 於取得使用者授權後，於每次同步作業開始後 5 分鐘內完成最近一期電子發票資料匯入，且匯入成功率 shall 達 99% 以上。</td>
+<td>SRS-003 中之自動匯入需以同步時間與成功率界定，才能驗證系統對資料完整性的支援程度。</td>
+<td>情境二、情境四</td>
+</tr>
+<tr>
+<td>MOUSE-PR-004</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>MOUSE 系統 shall 於新增消費紀錄後 2 秒內完成重複比對，且對相同日期、金額、商家與發票號碼之重複紀錄辨識正確率 shall 達 98% 以上。</td>
+<td>SRS-004 中之「自動去重」若無辨識標準與正確率門檻，將無法評估其有效性。</td>
+<td>情境一、情境四</td>
+</tr>
+<tr>
+<td>MOUSE-PR-005</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>MOUSE 系統 shall 於每筆消費紀錄成功寫入後 1 秒內更新並顯示當期剩餘可用預算，且預算計算誤差 shall 不得超過 ±1 元。</td>
+<td>SRS-005 中之「即時顯示」需量化為更新時間與計算精度，以確保使用者可據以決策。</td>
+<td>四個情境均適用</td>
+</tr>
+<tr>
+<td>MOUSE-PR-006</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>MOUSE 系統 shall 於預估使用者當期支出達預算上限 80% 時，於 1 分鐘內透過 Line 發送 Warning 等級通知，且通知送達成功率 shall 達 95% 以上。</td>
+<td>SRS-006 中之「超支風險通知」需定義觸發門檻、通知時限與送達率，才能成為可驗證需求。</td>
+<td>情境四</td>
+</tr>
+<tr>
+<td>MOUSE-PR-007</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>MOUSE 系統 shall 於偵測使用者當期剩餘預算低於 10% 或已低於 0 元時，於 30 秒內發送 Emergency 等級通知，且通知送達成功率 shall 達 99% 以上。</td>
+<td>SRS-007 中之「緊急通知」需比一般預警更嚴格，因此需設定更明確之門檻與時效要求。</td>
+<td>情境四</td>
+</tr>
+<tr>
+<td>MOUSE-PR-008</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>MOUSE 系統 shall 於使用者累積至少 15 個交易日之有效消費資料後啟動超支風險預測模型，且該模型對超支風險分類之 Recall shall 達 85% 以上，Precision shall 達 75% 以上。</td>
+<td>SRS-008 中之 ML 預測需具備啟動條件與效能指標；考量 miss 比 false alarm 更危險，因此以 Recall 優先設定門檻。</td>
+<td>情境四</td>
+</tr>
+</tbody>
+</table>
+<h3>OR-02（Why）：引導使用者建立健康消費習慣</h3>
+<blockquote>
+<p>MOUSE 系統 shall 引導使用者建立健康消費習慣，達成連續 N 個週期後超支頻率顯著下降之目標。
+<strong>情境來源：</strong> 情境一、情境二、情境四</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>需求編號</th>
+<th>層級</th>
+<th>需求語句</th>
+<th>推導邏輯</th>
+<th>情境來源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MOUSE-SRS-009</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 於使用者輸入或匯入消費後即時顯示當期剩餘可用預算。</td>
+<td>即時回饋讓使用者持續感知預算狀態，是養成消費紀律的基礎；若無法即時看到餘額變化，使用者難以在日常決策中建立控制感。</td>
+<td>情境一、情境二、情境三、情境四</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-010</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 限制一般預警推播頻率，避免過度打擾使用者。</td>
+<td>過於頻繁的通知將引發「通知疲勞」，使用者可能因此關閉推播或忽略預警，反而降低系統有效性；因此需限制推播頻率以維持使用者信任。</td>
+<td>情境四（月底危機型）</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-011</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 在使用者長時間無消費紀錄時主動詢問確認狀況。</td>
+<td>若使用者停止輸入資料，系統將失去預測與預警能力；主動詢問可確認是串接問題還是使用者已停用，避免資料斷層導致預警失效。</td>
+<td>情境二（新鮮人財務茫然型）</td>
+</tr>
+<tr>
+<td>MOUSE-PR-009</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>MOUSE 系統在接收到單筆新增或修改之消費紀錄後，完成資料庫更新並於前端介面顯示最新餘額的延遲時間應 ≤ 1 秒（閾值）/ 0.5 秒（目標值）。</td>
+<td>SRS-009 中之「即時顯示」需量化為可驗證之延遲時間；閾值與目標值分開定義，供 V&amp;V 分級驗收。</td>
+<td>情境一、情境二、情境三、情境四</td>
+</tr>
+<tr>
+<td>MOUSE-PR-010</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>MOUSE 系統推播模組針對「非嚴重超支之一般消費預警」，在同一太陽曆日（UTC+8，00:00–23:59）內，對單一使用者的觸發與發送次數上限應嚴格限制為 1 次。</td>
+<td>SRS-010 中之「限制頻率」需具體化為時間窗口與次數上限；採用 UTC+8 太陽曆日而非滾動 24 小時，與使用者生活作息對齊，便於理解與驗證。</td>
+<td>情境四</td>
+</tr>
+<tr>
+<td>MOUSE-PR-011</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>當系統偵測到使用者<strong>連續 72 小時（閾值）</strong>未有新增紀錄或同步動作時，應於次日日間（09:00-21:00）自動觸發一次狀況確認推播。</td>
+<td>SRS-011 中之「長時間無紀錄」需定義具體時長門檻與觸發時段，避免深夜推播影響使用者體驗。</td>
+<td>情境二</td>
+</tr>
+</tbody>
+</table>
+<h3>OR-03（Why）：提供理財入門誘因</h3>
+<blockquote>
+<p>MOUSE 系統 shall 讓使用者看到省錢可帶來投資成長的正向回饋，藉此提升持續使用動機。
+<strong>情境來源：</strong> 情境三（理財入門誘因型）</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>需求編號</th>
+<th>層級</th>
+<th>需求語句</th>
+<th>推導邏輯</th>
+<th>情境來源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MOUSE-SRS-012</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 提供使用者投資風險評估測驗，以了解其風險承受度。</td>
+<td>投資建議需基於使用者的風險承受度；若未事先評估，系統可能推送不適合的建議，降低信任度甚至引發法律風險。</td>
+<td>情境三（理財入門誘因型）</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-013</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 依據使用者風險屬性與結餘金額提供投資建議通知。</td>
+<td>省下來的錢若無後續引導，使用者缺乏持續控制消費的動機；透過個人化投資建議建立「省錢→增值」的正向回饋迴路。</td>
+<td>情境三（理財入門誘因型）</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-014</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 提供信用卡回饋優惠資訊供使用者參考。</td>
+<td>信用卡回饋是使用者日常消費中最直接的「省錢」管道；提供此資訊可增加系統實用性與使用者黏著度。</td>
+<td>情境三（理財入門誘因型）</td>
+</tr>
+<tr>
+<td>MOUSE-PR-012</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>測驗應於使用者首次完成消費紀錄設定後 24 小時內主動推送邀請，測驗題數 ≤ 10 題，完成時間 ≤ 3 分鐘，結果應於提交後 2 秒內回傳風險屬性分類。</td>
+<td>SRS-012 中之「提供測驗」需定義推送時機、測驗長度與回傳速度，確保使用者體驗流暢且不造成負擔。</td>
+<td>情境三</td>
+</tr>
+<tr>
+<td>MOUSE-PR-013</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>投資建議應於每個發薪週期結束後 24 小時內自動產生，內容須對應使用者風險屬性（保守／穩健／積極），僅提供建議不得包含任何可直接執行交易之連結或操作。</td>
+<td>SRS-013 中之「提供投資建議」需明確產生時機、個人化條件與法規邊界（不得代為操作），才能成為可驗證需求。</td>
+<td>情境三</td>
+</tr>
+<tr>
+<td>MOUSE-PR-014</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>信用卡回饋資訊應每 24 小時至少更新一次，爬蟲抓取成功率達 95% 以上，資訊呈現延遲（從抓取完成到使用者可查詢）應 ≤ 10 分鐘。</td>
+<td>SRS-014 中之「提供回饋資訊」需定義更新頻率、抓取成功率與呈現延遲，確保資訊時效性與可靠性。</td>
+<td>情境三</td>
+</tr>
+</tbody>
+</table>
+<h3>OR-04（Why）：支援新鮮人建立財務結構</h3>
+<blockquote>
+<p>MOUSE 系統 shall 支援剛出社會、不熟悉理財的使用者，在資料不足的初期階段仍能獲得基本預算引導。
+<strong>情境來源：</strong> 情境二（新鮮人財務茫然型）</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>需求編號</th>
+<th>層級</th>
+<th>需求語句</th>
+<th>推導邏輯</th>
+<th>情境來源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MOUSE-SRS-015</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 在消費紀錄不足時仍提供基本預算上限提醒。</td>
+<td>ML 模型需累積足夠資料才能啟動；在冷啟動期間若完全無預警功能，新鮮人使用者將在最需要引導的階段得不到保護，因此需以規則引擎作為 fallback。</td>
+<td>情境二（新鮮人財務茫然型）</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-016</td>
+<td>系統需求 SRS (WHAT)</td>
+<td>MOUSE 系統 shall 在使用者長時間無消費紀錄時主動詢問確認狀況。</td>
+<td>新鮮人使用者可能因不熟悉操作而中斷使用；系統若未主動關懷，將流失最需要幫助的目標族群。</td>
+<td>情境二（新鮮人財務茫然型）</td>
+</tr>
+<tr>
+<td>MOUSE-PR-015</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>ML 冷啟動期間（交易日 &lt; 15 天），系統應以 Layer 1 規則引擎即時運算，當單筆或累計消費超過使用者設定預算之 80% 時，於 1 分鐘內發送預算上限提醒，送達成功率達 95% 以上。</td>
+<td>SRS-015 中之「基本預算上限提醒」需定義冷啟動期間的觸發條件、時效與送達率，確保 fallback 機制有明確驗收標準。</td>
+<td>情境二</td>
+</tr>
+<tr>
+<td>MOUSE-PR-016</td>
+<td>性能需求 PR (HOW WELL)</td>
+<td>當系統偵測到使用者<strong>連續 72 小時（閾值）</strong>未有新增紀錄或同步動作時，應於次日日間（09:00-21:00）自動觸發一次狀況確認推播。</td>
+<td>SRS-016 中之「長時間無紀錄」需定義具體時長門檻與觸發時段，同 OR-02 情境亦適用於新鮮人族群。</td>
+<td>情境二</td>
+</tr>
+</tbody>
+</table>
+<h3>Shall Not（系統不得做）</h3>
+<table>
+<thead>
+<tr>
+<th>需求編號</th>
+<th>限制</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MOUSE-SRS-017</td>
+<td>系統 shall not 自動執行任何投資操作</td>
+<td>法規風險、liability</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-018</td>
+<td>系統 shall not 處理外幣交易</td>
+<td>超出 ODD</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-019</td>
+<td>系統 shall not 將使用者資料提供給第三方</td>
+<td>個資法</td>
+</tr>
+<tr>
+<td>MOUSE-SRS-020</td>
+<td>系統 shall not 共享使用者折扣碼</td>
+<td>法律風險</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>五、次系統需求規格（Subsystem SRS）</h2>
+<p><strong>次系統縮寫對照：</strong></p>
+<table>
+<thead>
+<tr>
+<th>縮寫</th>
+<th>全名</th>
+<th>中文</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NOTIF</td>
+<td>Notification &amp; Alert Subsystem</td>
+<td>通知與預警次系統</td>
+</tr>
+<tr>
+<td>BHVR</td>
+<td>Behavior Guidance Subsystem</td>
+<td>消費行為引導次系統</td>
+</tr>
+<tr>
+<td>ADVS</td>
+<td>Advisory &amp; Recommendation Subsystem</td>
+<td>理財建議次系統</td>
+</tr>
+<tr>
+<td>ONBD</td>
+<td>Onboarding &amp; Cold-Start Subsystem</td>
+<td>新手引導次系統</td>
+</tr>
+</tbody>
+</table>
+<p><strong>編號格式：</strong> <code>MOUSE-{SRS/PR}-{次系統縮寫}-{序號}</code></p>
+<h3>OR-01：通知與預警次系統（NOTIF）</h3>
+<h4>功能性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-NOTIF-001</strong> | 關鍵（Critical） | 來源：OR-01, MOUSE-SRS-006</p>
+<p>MOUSE 系統通知與預警次系統應支援 Warning 及 Emergency 兩個等級之預警通知，兩者於觸發條件、發送時效及頻率限制上 shall 有所區分，且系統 shall 能在任何時間點正確判斷應發送哪個等級之通知（含同時觸發時優先發送 Emergency）。</p>
+<p><em>備註：此為整個次系統的頂層功能需求。確保兩個等級共存且邏輯正確，是後續所有性能需求的前提。</em></p>
+<p><strong>MOUSE-SRS-NOTIF-002</strong> | 關鍵（Critical） | 來源：OR-01, MOUSE-SRS-006, MOUSE-PR-006</p>
+<p>MOUSE 系統 shall 於 ML 預估或靜態計算顯示使用者當期累積支出達預算上限 80% 時，於 1 分鐘內透過 Line Push API 發送 Warning 等級通知，且通知送達成功率 shall 達 95% 以上（以 30 天滾動平均值驗證）。</p>
+<p><em>備註：80% 門檻來自情境四分析：使用者第 25 天已達 85%，若門檻設為 95% 則留給使用者的調整空間不足。1 分鐘時效確保即時性；95% 送達率為 Line Business API 的商業 SLA 基準。</em></p>
+<p><strong>MOUSE-SRS-NOTIF-003</strong> | 關鍵（Critical） | 來源：OR-01, MOUSE-SRS-007, MOUSE-PR-007</p>
+<p>MOUSE 系統 shall 於偵測到使用者當期剩餘預算低於薪水之 10% 或已低於 0 元時，於 30 秒內發送 Emergency 等級通知，且 Emergency 通知 shall 不受每日 1 次之一般通知頻率限制，送達成功率 shall 達 99% 以上。</p>
+<p><em>備註：Emergency 豁免每日頻率限制，因為使用者已進入財務危機狀態，此時正確性優先於使用者體驗。30 秒時效比 Warning 的 1 分鐘更嚴格，反映此情境的緊急程度。</em></p>
+</blockquote>
+<h4>性能性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-NOTIF-004</strong> | 高（High） | 來源：OR-01, REQ-04（False Alarm 控制）</p>
+<p>MOUSE 系統 shall 對每位使用者於每個發薪週期內限制 Warning 等級通知至多 2 次；當該週期內 Warning 通知次數達上限後，系統 shall 自動停止對該使用者之 Warning 推播，並於管理員後台記錄異常，通知管理員手動處理。</p>
+<p><em>備註：此需求平衡「Safety: miss &gt; false alarm」原則與「避免過度推播造成使用者關閉通知」的長期風險。Emergency 通知不受此限制。</em></p>
+<p><strong>MOUSE-SRS-NOTIF-005</strong> | 高（High） | 來源：OR-01, 系統架構決策（次系統解耦）</p>
+<p>MOUSE 系統通知與預警次系統 shall 透過定義的內部 API（介面控制文件 ICD-MOUSE-NOTIF-001 版本 1.0 以上）接收來自 ML 預測引擎及靜態預算計算引擎的觸發訊號，且介面格式 shall 包含：觸發等級、使用者 ID、當前剩餘預算百分比、觸發時間戳記。</p>
+<p><em>備註：此為介面需求（Interface Requirement）——不直接追溯至 OR-01，而追溯至系統架構決策（ML 引擎與通知次系統解耦）。此類需求必須在 SRS 中明確標示並說明其來源。</em></p>
+</blockquote>
+<h4>可靠性與可用性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-NOTIF-006</strong> | 關鍵（Critical） | 來源：OR-01, 系統非功能性需求（NFR）</p>
+<p>MOUSE 系統通知與預警次系統 shall 在 24 小時內達到 99.9% 以上的可用率（不含 Line 平台本身之中斷時間），且在 Line API 暫時性失敗時 shall 以指數退避（exponential backoff）策略重試，重試次數 shall 不低於 3 次，重試間隔 shall 不超過 5 分鐘。</p>
+<p><em>備註：系統的核心價值依賴通知能夠送達。若通知次系統不可用，使用者將無法收到超支預警，直接違反 OR-01。</em></p>
+</blockquote>
+<h4>限制性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-NOTIF-007</strong> | 高（High） | 來源：OR-01, Agent 邊界定義（CONOPS §6）</p>
+<p>MOUSE 系統通知與預警次系統 shall 僅發送消費預算相關通知及投資建議通知；系統 shall not 透過任何通知管道發送任何形式之投資執行指令或代替使用者授權任何金融交易。</p>
+<p><em>備註：此為「Agent 邊界」限制需求，對應 CONOPS 中「建議權 ✓，執行權 ✗」的設計原則，同時降低金融法規風險。</em></p>
+<p><strong>MOUSE-SRS-NOTIF-008</strong> | 高（High） | 來源：OR-01, 個資法（台灣個人資料保護法）</p>
+<p>MOUSE 系統 shall 確保所有推播通知訊息內容不包含使用者之完整消費明細、發票號碼或任何可識別第三方商家交易細節；通知訊息 shall 僅呈現預算使用百分比、剩餘金額（TWD）及通知等級，不得包含任何可能違反個人資料保護法之敏感資訊。</p>
+<p><em>備註：此需求來自台灣個資法限制及 Line 平台訊息長度考量。通知訊息為推播至使用者手機，若包含過多敏感資訊，將造成隱私洩露風險。</em></p>
+</blockquote>
+<h3>OR-02：消費行為引導次系統（BHVR）</h3>
+<h4>功能性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-BHVR-001</strong> | 高（High） | 來源：OR-02, MOUSE-SRS-009</p>
+<p>MOUSE 系統消費行為引導次系統 shall 於使用者每次輸入或匯入消費紀錄後，即時計算並顯示當期剩餘可用預算，使使用者持續感知預算消耗狀態。</p>
+<p><em>備註：此為行為引導次系統的頂層功能需求。即時回饋是養成消費紀律的基礎——使用者需在每次消費後立即看到餘額變化，才能逐步建立「花多少、剩多少」的直覺。</em></p>
+<p><strong>MOUSE-SRS-BHVR-002</strong> | 高（High） | 來源：OR-02, MOUSE-SRS-010</p>
+<p>MOUSE 系統 shall 對一般消費預警推播實施頻率限制，避免過度通知導致使用者關閉推播或產生通知疲勞，進而降低系統長期有效性。</p>
+<p><em>備註：頻率限制與通知次系統（NOTIF）的推播機制協作，但歸屬於行為引導次系統，因其目的是維持使用者與系統的長期信任關係，而非單純的技術送達問題。</em></p>
+<p><strong>MOUSE-SRS-BHVR-003</strong> | 高（High） | 來源：OR-02, MOUSE-SRS-011</p>
+<p>MOUSE 系統 shall 於使用者長時間無消費紀錄時，主動發送狀況確認推播，以維持資料連續性並避免預測模型因資料斷層而失效。</p>
+<p><em>備註：若使用者停止輸入資料，系統將逐漸喪失預測能力，行為引導功能形同虛設。主動詢問可及早發現問題並挽回使用者。</em></p>
+</blockquote>
+<h4>性能性需求</h4>
+<blockquote>
+<p><strong>MOUSE-PR-BHVR-001</strong> | 高（High） | 來源：OR-02, MOUSE-SRS-BHVR-001</p>
+<p>MOUSE 系統 shall 於接收到單筆新增或修改之消費紀錄後，完成資料庫更新並於前端介面顯示最新餘額的延遲時間 shall 不超過 1 秒（閾值）/ 0.5 秒（目標值）。</p>
+<p><em>備註：閾值與目標值分開定義，供 V&amp;V 分級驗收。1 秒為使用者感知「即時」的上限（Nielsen 回應時間理論），0.5 秒為理想目標。</em></p>
+<p><strong>MOUSE-PR-BHVR-002</strong> | 高（High） | 來源：OR-02, MOUSE-SRS-BHVR-002</p>
+<p>MOUSE 系統推播模組針對「非嚴重超支之一般消費預警」，在同一太陽曆日（UTC+8，00:00–23:59）內，對單一使用者的觸發與發送次數上限 shall 嚴格限制為 1 次。</p>
+<p><em>備註：採用 UTC+8 太陽曆日而非滾動 24 小時，與使用者生活作息對齊，便於理解與驗證。</em></p>
+<p><strong>MOUSE-PR-BHVR-003</strong> | 高（High） | 來源：OR-02, MOUSE-SRS-BHVR-003</p>
+<p>MOUSE 系統 shall 於偵測到使用者連續 72 小時（閾值）未有新增紀錄或同步動作時，於次日日間（09:00–21:00，UTC+8）自動觸發一次狀況確認推播。</p>
+<p><em>備註：72 小時門檻平衡「及時發現問題」與「避免過度打擾」；日間推播時段避免深夜通知影響使用者體驗。</em></p>
+</blockquote>
+<h4>可靠性與可用性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-BHVR-004</strong> | 高（High） | 來源：OR-02, 系統非功能性需求（NFR）</p>
+<p>MOUSE 系統消費行為引導次系統 shall 確保剩餘預算計算結果之誤差不超過 ±1 元（TWD），且當資料來源（手動輸入與電子發票）發生衝突時，shall 以去重後之金額為準，不得重複計算。</p>
+<p><em>備註：預算計算精度直接影響使用者信任。若餘額顯示不準確，使用者將質疑系統可靠性，進而放棄使用，違反 OR-02「養成習慣」的目標。±1 元為新台幣最小有意義單位。</em></p>
+</blockquote>
+<h4>限制性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-BHVR-005</strong> | 中（Medium） | 來源：OR-02, 使用者體驗設計原則</p>
+<p>MOUSE 系統消費行為引導次系統 shall not 於剩餘預算顯示中包含任何帶有負面情緒暗示之用語（如「你又超支了」、「消費失控」等）；回饋訊息 shall 採用中性且鼓勵性的語氣呈現。</p>
+<p><em>備註：行為引導的目標是長期習慣養成，負面語氣可能造成使用者羞愧感而放棄使用。正向或中性的回饋語氣有助於維持使用者持續記帳的動機。</em></p>
+</blockquote>
+<h3>OR-03：理財建議次系統（ADVS）</h3>
+<h4>功能性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-ADVS-001</strong> | 高（High） | 來源：OR-03, MOUSE-SRS-012</p>
+<p>MOUSE 系統理財建議次系統 shall 提供使用者投資風險評估測驗，以分類其風險承受度為保守、穩健或積極三種屬性，作為後續投資建議之依據。</p>
+<p><em>備註：此為理財建議次系統的頂層功能需求。風險屬性分類是產生個人化建議的前提，若無此步驟，系統將無法區分不同使用者的風險偏好。</em></p>
+<p><strong>MOUSE-SRS-ADVS-002</strong> | 高（High） | 來源：OR-03, MOUSE-SRS-013</p>
+<p>MOUSE 系統 shall 依據使用者風險屬性與當期結餘金額，自動產生個人化投資建議通知，且建議內容 shall 僅供參考，不得包含任何可直接執行交易之連結或操作。</p>
+<p><em>備註：「僅建議不執行」為系統 Agent 邊界的核心限制（對應 MOUSE-SRS-017），此處在功能層級再次明確，確保次系統設計不會逾越法規邊界。</em></p>
+<p><strong>MOUSE-SRS-ADVS-003</strong> | 中（Medium） | 來源：OR-03, MOUSE-SRS-014</p>
+<p>MOUSE 系統 shall 透過網路爬蟲定期抓取信用卡回饋優惠資訊，並提供使用者查詢介面。</p>
+<p><em>備註：信用卡回饋為加值功能，非系統核心任務（避免超支），因此優先等級為中。但此功能可提升使用者黏著度與系統實用性。</em></p>
+</blockquote>
+<h4>性能性需求</h4>
+<blockquote>
+<p><strong>MOUSE-PR-ADVS-001</strong> | 高（High） | 來源：OR-03, MOUSE-SRS-ADVS-001</p>
+<p>MOUSE 系統 shall 於使用者首次完成消費紀錄設定後 24 小時內主動推送風險評估測驗邀請，測驗題數 shall 不超過 10 題，完成時間 shall 不超過 3 分鐘，結果 shall 於提交後 2 秒內回傳風險屬性分類。</p>
+<p><em>備註：24 小時推送時機確保使用者在初始設定熱度最高時接觸測驗；10 題 / 3 分鐘上限避免使用者因測驗過長而放棄；2 秒回傳確保即時回饋體驗。</em></p>
+<p><strong>MOUSE-PR-ADVS-002</strong> | 高（High） | 來源：OR-03, MOUSE-SRS-ADVS-002</p>
+<p>MOUSE 系統 shall 於每個發薪週期結束後 24 小時內自動產生投資建議，內容 shall 對應使用者風險屬性（保守／穩健／積極），且 shall not 包含任何可直接執行交易之連結或操作。</p>
+<p><em>備註：週期結束後 24 小時為產生建議的時間窗口，確保系統有足夠時間彙整該週期消費數據後再產生建議，避免資料不完整。</em></p>
+<p><strong>MOUSE-PR-ADVS-003</strong> | 中（Medium） | 來源：OR-03, MOUSE-SRS-ADVS-003</p>
+<p>MOUSE 系統 shall 每 24 小時至少更新一次信用卡回饋資訊，爬蟲抓取成功率 shall 達 95% 以上，資訊呈現延遲（從抓取完成到使用者可查詢）shall 不超過 10 分鐘。</p>
+<p><em>備註：24 小時更新頻率平衡資訊時效性與爬蟲對外部網站的請求負載；95% 成功率考量外部網站結構變動的容錯空間。</em></p>
+</blockquote>
+<h4>可靠性與可用性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-ADVS-004</strong> | 中（Medium） | 來源：OR-03, 系統非功能性需求（NFR）</p>
+<p>MOUSE 系統理財建議次系統 shall 在爬蟲抓取失敗時，保留並顯示最近一次成功抓取之信用卡回饋資訊，且 shall 於資訊頁面標示「最後更新時間」，使使用者可判斷資訊時效性。</p>
+<p><em>備註：爬蟲依賴外部網站，無法保證 100% 成功。降級策略確保使用者不會看到空白頁面，同時透過時間標示維持資訊透明度。</em></p>
+</blockquote>
+<h4>限制性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-ADVS-005</strong> | 高（High） | 來源：OR-03, MOUSE-SRS-017, Agent 邊界定義（CONOPS §6）</p>
+<p>MOUSE 系統理財建議次系統 shall not 產生任何包含特定金融商品代碼、申購連結或交易授權指令之內容；投資建議 shall 僅以文字描述資產配置方向與風險提示。</p>
+<p><em>備註：此為 Agent 邊界在理財建議次系統的具體落地。即使使用者主動要求，系統亦不得提供可直接執行交易的資訊，以避免觸犯金融法規。</em></p>
+<p><strong>MOUSE-SRS-ADVS-006</strong> | 高（High） | 來源：OR-03, 信用卡回饋爬蟲法律可行性評估</p>
+<p>MOUSE 系統 shall 僅抓取公開可存取之信用卡回饋資訊，shall not 繞過任何登入驗證、CAPTCHA 或 robots.txt 限制，且 shall 遵守各目標網站之使用條款。</p>
+<p><em>備註：爬蟲的法律可行性為待確認事項（見待辦清單）。此需求預先設定合規底線，確保即使法律評估尚未完成，系統行為亦不逾越基本合法範圍。</em></p>
+</blockquote>
+<h3>OR-04：新手引導次系統（ONBD）</h3>
+<h4>功能性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-ONBD-001</strong> | 關鍵（Critical） | 來源：OR-04, MOUSE-SRS-015</p>
+<p>MOUSE 系統新手引導次系統 shall 於 ML 模型尚未啟動（冷啟動期間）時，以 Layer 1 規則引擎提供基本預算上限提醒功能，確保使用者在資料不足的初期階段仍受到預算保護。</p>
+<p><em>備註：此為新手引導次系統的頂層功能需求。新鮮人使用者在最初階段最脆弱，若系統因冷啟動而完全無預警，將直接違反 OR-04 的設計目標。</em></p>
+<p><strong>MOUSE-SRS-ONBD-002</strong> | 高（High） | 來源：OR-04, MOUSE-SRS-016</p>
+<p>MOUSE 系統 shall 於使用者長時間無消費紀錄時，主動發送狀況確認推播，以確認是串接問題、操作不熟悉或使用者已停用。</p>
+<p><em>備註：新鮮人使用者可能因不熟悉操作而中斷使用；系統若未主動關懷，將流失最需要幫助的目標族群，同時造成 ML 模型資料斷層。</em></p>
+</blockquote>
+<h4>性能性需求</h4>
+<blockquote>
+<p><strong>MOUSE-PR-ONBD-001</strong> | 關鍵（Critical） | 來源：OR-04, MOUSE-SRS-ONBD-001</p>
+<p>MOUSE 系統 shall 於 ML 冷啟動期間（交易日少於 15 天），以 Layer 1 規則引擎即時運算，當單筆或累計消費超過使用者設定預算之 80% 時，shall 於 1 分鐘內發送預算上限提醒，送達成功率 shall 達 95% 以上。</p>
+<p><em>備註：80% 門檻與 NOTIF-002 的 Warning 門檻一致，確保冷啟動期間與正式運行的預警標準相同。1 分鐘時效與 95% 送達率亦對齊 NOTIF 次系統標準。</em></p>
+<p><strong>MOUSE-PR-ONBD-002</strong> | 高（High） | 來源：OR-04, MOUSE-SRS-ONBD-002</p>
+<p>MOUSE 系統 shall 於偵測到使用者連續 72 小時未有新增紀錄或同步動作時，於次日日間（09:00–21:00，UTC+8）自動觸發一次狀況確認推播。</p>
+<p><em>備註：72 小時門檻避免對偶爾忘記記帳的使用者過度打擾；日間推播（09:00–21:00）避免深夜通知影響使用者體驗。</em></p>
+</blockquote>
+<h4>可靠性與可用性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-ONBD-003</strong> | 高（High） | 來源：OR-04, 系統非功能性需求（NFR）</p>
+<p>MOUSE 系統新手引導次系統 shall 確保 Layer 1 規則引擎在 ML 模型啟動前後均可獨立運行，且 ML 模型啟動後 Layer 1 shall 作為備援機制持續運作，當 ML 引擎異常時自動接管預警功能。</p>
+<p><em>備註：Layer 1 不僅是冷啟動的 fallback，也是 ML 異常時的安全網。確保任何時候使用者至少有基本預算保護，符合「miss &gt; false alarm」的安全原則。</em></p>
+</blockquote>
+<h4>限制性需求</h4>
+<blockquote>
+<p><strong>MOUSE-SRS-ONBD-004</strong> | 中（Medium） | 來源：OR-04, 使用者體驗設計原則</p>
+<p>MOUSE 系統新手引導次系統 shall not 於同一太陽曆日（UTC+8）內對同一使用者發送超過 1 次狀況確認推播，且於使用者回覆確認後 shall 立即停止該週期之後續確認推播。</p>
+<p><em>備註：過度詢問將造成新鮮人使用者反感，與系統「引導」而非「騷擾」的定位不符。使用者一旦回覆，即視為活躍狀態，無需繼續詢問。</em></p>
+</blockquote>
+<hr />
+<h2>六、需求衝突分析</h2>
+<h3>6.1 識別的衝突對</h3>
+<p><strong>需求 A：MOUSE-SRS-NOTIF-002</strong> — 預警即時性與送達率</p>
+<blockquote>
+<p>MOUSE 系統 shall 於累積支出達預算上限 80% 時，於 <strong>1 分鐘內</strong>透過 Line Push API 發送 Warning 等級通知，且通知送達成功率 shall 達 <strong>95% 以上</strong>。</p>
+</blockquote>
+<p><strong>需求 B：MOUSE-SRS-BHVR-002 / MOUSE-SRS-NOTIF-004</strong> — 推播頻率限制與 False Alarm 控制</p>
+<blockquote>
+<p>MOUSE 系統 shall 於同一太陽曆日（UTC+8）內對單一使用者之一般預警推播次數限制為 <strong>1 次</strong>，且每發薪週期內 Warning 通知至多 <strong>2 次</strong>；超過後自動停止推播。</p>
+</blockquote>
+<h3>6.2 張力本質</h3>
+<table>
+<thead>
+<tr>
+<th>維度</th>
+<th>需求 A 的要求</th>
+<th>需求 B 的要求</th>
+<th>衝突點</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>目標</td>
+<td>即時偵測超支風險並通知使用者</td>
+<td>避免過度推播導致通知疲勞</td>
+<td>更積極的通知 vs. 更節制的通知</td>
+</tr>
+<tr>
+<td>Safety 立場</td>
+<td>miss &gt; false alarm，寧可多報</td>
+<td>false alarm 過多會使使用者關閉通知，間接造成 miss</td>
+<td>兩者都試圖降低 miss，但手段相反</td>
+</tr>
+<tr>
+<td>觸發情境</td>
+<td>使用者一天內多次消費，多次觸碰 80% 門檻（如月初大額支出型：早上繳租、下午繳學費）</td>
+<td>每日僅允許 1 次 Warning，第二次觸碰門檻時系統被迫靜默</td>
+<td>單日多次觸發 vs. 單日 1 次上限</td>
+</tr>
+<tr>
+<td>週期層級</td>
+<td>使用者可能在同一週期內多次進出 80% 門檻（如收到退款後又消費）</td>
+<td>每週期最多 2 次 Warning，第三次起系統完全靜默</td>
+<td>動態預算波動 vs. 固定次數上限</td>
+</tr>
+</tbody>
+</table>
+<p><strong>核心張力：</strong> 需求 A 要求系統「只要偵測到風險就通知」，需求 B 要求系統「即使偵測到風險也可能不通知」。充分滿足 A（每次達標都發通知）會直接違反 B 的頻率限制；嚴格遵守 B（絕不超過上限）則可能導致 A 所防範的「漏報」發生。</p>
+<h3>6.3 解決方案</h3>
+<h4>方案一：分級靜默機制（推薦）</h4>
+<p>將「靜默」拆分為兩種模式，而非一刀切停止所有通知：</p>
+<table>
+<thead>
+<tr>
+<th>狀態</th>
+<th>Warning 行為</th>
+<th>Emergency 行為</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>當日首次觸發</td>
+<td>正常發送</td>
+<td>正常發送</td>
+</tr>
+<tr>
+<td>當日第 2+ 次觸發</td>
+<td>靜默，但在 App/LineBot 內標記未讀預警（pull 模式）</td>
+<td>不受限，照常發送</td>
+</tr>
+<tr>
+<td>週期第 3+ 次觸發</td>
+<td>靜默，記錄至管理員後台</td>
+<td>不受限，照常發送</td>
+</tr>
+</tbody>
+</table>
+<p><strong>為什麼可行：</strong>
+- Warning 從 push 降級為 pull，使用者主動查詢時仍可看到所有預警紀錄，不會真正「miss」
+- Emergency 完全不受限（MOUSE-SRS-NOTIF-003 已定義豁免），真正危急情況仍能即時通知
+- 管理員介入機制保留異常使用者的處理能力</p>
+<p><strong>需修改的需求：</strong>
+- MOUSE-SRS-BHVR-002：補充「超過每日上限之 Warning 觸發 shall 轉為 pull 模式紀錄」
+- MOUSE-SRS-NOTIF-004：補充「靜默期間系統 shall 持續記錄所有觸發事件至使用者預警歷史」</p>
+<h4>方案二：動態門檻調整</h4>
+<p>當使用者在同一週期內頻繁觸碰 80% 門檻時，自動上調 Warning 門檻（如 80% → 85% → 90%），減少觸發次數，但每次通知的準確度更高。</p>
+<p><strong>優點：</strong> 減少 false alarm，不需拆分 push/pull 模式
+<strong>缺點：</strong> 門檻上調後，留給使用者的調整空間變小，可能錯過真正即將超支的時刻</p>
+<h4>方案三：接受設計限制</h4>
+<p>接受現行定義，承認在特定邊界情境（單日多次觸碰門檻）下，系統會因頻率限制而靜默。將此記錄為已知設計限制（Known Design Constraint），並在使用者手冊中說明。</p>
+<p><strong>優點：</strong> 最簡單，不需修改任何需求
+<strong>缺點：</strong> 直接違背「miss &gt; false alarm」的安全原則</p>
+<h3>6.4 建議決策</h3>
+<p>採用<strong>方案一（分級靜默機制）</strong>，理由：</p>
+<ol>
+<li><strong>不違反任一需求的核心意圖</strong>：Warning 仍然會被記錄（A 的「偵測」目標達成），但不會過度推播（B 的「頻率限制」目標達成）</li>
+<li><strong>符合安全原則</strong>：Emergency 通知完全不受影響，最危急的情況永遠不會被靜默</li>
+<li><strong>可驗證</strong>：pull 模式紀錄可透過測試驗證「是否所有觸發事件都有被記錄」，送達率指標改為「push + pull 總覆蓋率」</li>
+<li><strong>實作成本低</strong>：僅需在通知模組增加一個判斷層（是否超過當日/週期上限），超過則寫入歷史紀錄而非呼叫 Line Push API</li>
+</ol>
+<hr />
+<h2>七、待討論</h2>
+<ul>
+<li>[x] Deliverable 1：需求推導追溯表（UR → OR → System Req → Performance Req）——見第四節推導鏈摘要及 OR-01~04 詳細表格</li>
+<li>[x] Deliverable 2：次系統 SRS 片段（NOTIF 8 條 + BHVR 5 條 + ADVS 6 條 + ONBD 4 條 = 23 條）</li>
+<li>[x] Deliverable 3：需求衝突分析（NOTIF-002 vs. BHVR-002 / NOTIF-004）</li>
+</ul>
+</body>
+</html>
